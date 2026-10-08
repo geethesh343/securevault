@@ -1,0 +1,6 @@
+{
+  "name": "LifeVault AI - Life Management Platform",
+  "description": "Secure cloud-based personal digital wallet for documents, subscriptions, warranties, passwords, bill tracking, expiry reminders, and family access.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
