@@ -145,6 +145,13 @@ export interface UserProfile {
   memberId?: string;
   relationship?: string;
   accessLevel?: 'Owner' | 'View Only' | 'Download' | 'Full Access';
+  sessionToken?: string;
+  tokenExpiresAt?: string;
+  twoFactorEnabled?: boolean;
+  securityLevel?: 'Standard (OAuth 2.0)' | 'High (2FA Enforced)' | 'Enterprise Cloud';
+  lastLoginAt?: string;
+  authProvider?: 'google' | 'google_workspace';
+  verifiedEmail?: boolean;
 }
 
 export interface FinancialTaskHealthMetrics {

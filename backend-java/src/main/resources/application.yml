@@ -1,0 +1,32 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: lifevault-backend
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://accounts.google.com
+
+lifevault:
+  security:
+    jwt:
+      secret: "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970"
+      expiration-ms: 86400000 # 24 hours
+    google:
+      client-id: "${GOOGLE_CLIENT_ID:YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com}"
+  cloud:
+    s3:
+      bucket: "lifevault-s3-ap-south-1"
+      region: "ap-south-1"
+      encryption: "AES256"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

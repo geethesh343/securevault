@@ -58,24 +58,25 @@ export const ExpiryRenewalsTracker: React.FC = () => {
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `LifeVault_${item.title.replace(/\s+/g, '_')}_reminder.ics`;
+    link.download = `Renewal_${item.title.replace(/\s+/g, '_')}_${item.date}.ics`;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   };
 
-  const handleMarkRenewed = (item: (typeof expiringSoonItems)[0]) => {
-    const current = new Date(item.date);
-    const nextYear = new Date(current);
-    nextYear.setFullYear(current.getFullYear() + 1);
-    const nextDateStr = nextYear.toISOString().split('T')[0];
+  const handleQuickRenew1Year = (item: (typeof expiringSoonItems)[0]) => {
+    const nextYear = new Date(new Date(item.date).setFullYear(new Date(item.date).getFullYear() + 1))
+      .toISOString()
+      .split('T')[0];
 
     if (item.type === 'document') {
-      updateDocument(item.id, { expiryDate: nextDateStr });
+      updateDocument(item.id, { expiryDate: nextYear });
     } else if (item.type === 'subscription') {
-      updateSubscription(item.id, { nextRenewalDate: nextDateStr });
+      updateSubscription(item.id, { nextRenewalDate: nextYear });
     }
 
     setRenewedSuccessId(item.id);
-    setTimeout(() => setRenewedSuccessId(null), 2500);
+    setTimeout(() => setRenewedSuccessId(null), 3000);
   };
 
   return (
@@ -83,196 +84,189 @@ export const ExpiryRenewalsTracker: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
-            <ClockAlert className="w-6 h-6 text-amber-400" />
-            Expiry & Renewal Tracking
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
+            <ClockAlert className="w-6 h-6 text-slate-800" />
+            Expiry & Renewal Reminders
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Automated alerts for passport renewal, health insurance policies, warranties & recurring billing
+          <p className="text-xs text-slate-600 mt-0.5">
+            Unified timeline tracking warranties, passport validity, vehicle insurance, and billing deadlines
           </p>
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 p-1 rounded-xl self-start sm:self-auto text-xs">
-          <button
-            onClick={() => setFilterType('all')}
-            className={`px-3 py-1.5 rounded-lg transition font-medium ${
-              filterType === 'all' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            All ({expiringSoonItems.length})
-          </button>
-          <button
-            onClick={() => setFilterType('document')}
-            className={`px-3 py-1.5 rounded-lg transition font-medium ${
-              filterType === 'document' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Documents
-          </button>
-          <button
-            onClick={() => setFilterType('subscription')}
-            className={`px-3 py-1.5 rounded-lg transition font-medium ${
-              filterType === 'subscription' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Subscriptions
-          </button>
-          <button
-            onClick={() => setFilterType('bill')}
-            className={`px-3 py-1.5 rounded-lg transition font-medium ${
-              filterType === 'bill' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Bills
-          </button>
-        </div>
-      </div>
-
-      {/* Critical Section */}
-      {criticalItems.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-rose-400 text-xs font-bold uppercase tracking-wider">
-            <AlertTriangle className="w-4 h-4" />
-            <span>Critical: Expiring Within 15 Days ({criticalItems.length})</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {criticalItems.map((item) => (
-              <div
-                key={item.id}
-                className="p-5 rounded-2xl bg-rose-950/20 border border-rose-500/30 flex flex-col justify-between space-y-4"
+        <div className="flex items-center gap-2">
+          {/* Quick filter tabs */}
+          <div className="flex items-center p-1 rounded-xl bg-slate-100 border border-slate-200">
+            {(['all', 'document', 'subscription', 'bill'] as const).map((type) => (
+              <button
+                key={type}
+                onClick={() => setFilterType(type)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize transition ${
+                  filterType === type
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-300 flex items-center justify-center shrink-0">
-                      <ClockAlert className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-white">{item.title}</h4>
-                      <p className="text-xs text-rose-300 font-mono">
-                        Expires in {item.daysRemaining} days • {item.date}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-300 uppercase">
-                    Urgent
-                  </span>
-                </div>
-
-                <div className="pt-2 border-t border-rose-500/20 flex items-center justify-between gap-2">
-                  <button
-                    onClick={() => handleDownloadCalendarIcs(item)}
-                    className="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-300 text-xs font-medium border border-slate-700 transition flex items-center gap-1.5"
-                  >
-                    <Calendar className="w-3.5 h-3.5 text-blue-400" /> Add to Calendar (.ics)
-                  </button>
-
-                  <button
-                    onClick={() => handleMarkRenewed(item)}
-                    className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition flex items-center gap-1.5"
-                  >
-                    {renewedSuccessId === item.id ? (
-                      <>
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Renewed!
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="w-3.5 h-3.5" /> Renewed +1 Year
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
+                {type === 'all' ? 'All Items' : `${type}s`}
+              </button>
             ))}
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Upcoming Section (16 to 45 days) */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider">
-          <Clock className="w-4 h-4" />
-          <span>Upcoming: Expiring in 16 to 45 Days ({upcomingItems.length})</span>
+      {/* Summary KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="p-5 rounded-2xl bg-white border border-rose-200 shadow-xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-rose-700 uppercase tracking-wider">Critical (&lt; 15 Days)</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-extrabold text-rose-700 font-mono">{criticalItems.length}</span>
+            <span className="text-xs text-rose-600 font-medium">Urgent action required</span>
+          </div>
+          <p className="text-[11px] text-slate-500 mt-1">Car insurance, power utilities & warranties</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {upcomingItems.map((item) => (
+        <div className="p-5 rounded-2xl bg-white border border-amber-200 shadow-xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">Upcoming (15-45 Days)</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-extrabold text-amber-800 font-mono">{upcomingItems.length}</span>
+            <span className="text-xs text-amber-700 font-medium">Plan renewals</span>
+          </div>
+          <p className="text-[11px] text-slate-500 mt-1">Recurring cloud and subscription renewals</p>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Future Horizon (&gt; 45 Days)</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-extrabold text-slate-900 font-mono">{futureItems.length}</span>
+            <span className="text-xs text-emerald-700 font-medium">On track</span>
+          </div>
+          <p className="text-[11px] text-slate-500 mt-1">Passports, term insurances & fixed deposits</p>
+        </div>
+      </div>
+
+      {/* Renewed Success Banner */}
+      {renewedSuccessId && (
+        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 animate-in fade-in">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>Record renewed successfully! Validity extended by +1 year and synchronized to encrypted store.</span>
+        </div>
+      )}
+
+      {/* Timeline Section */}
+      <div className="space-y-4">
+        {filteredItems.map((item) => {
+          const isUrgent = item.daysRemaining <= 15;
+          const isWarning = item.daysRemaining > 15 && item.daysRemaining <= 45;
+
+          return (
             <div
               key={item.id}
-              className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-500/40 transition flex flex-col justify-between space-y-3"
+              className={`p-4 sm:p-5 rounded-2xl border transition flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs ${
+                isUrgent
+                  ? 'bg-white border-rose-200 hover:border-rose-300'
+                  : isWarning
+                  ? 'bg-white border-amber-200 hover:border-amber-300'
+                  : 'bg-white border-slate-200 hover:border-slate-300'
+              }`}
             >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
-                    <Calendar className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-white line-clamp-1">{item.title}</h4>
-                    <span className="text-[10px] text-slate-400 uppercase font-mono">{item.category}</span>
-                  </div>
+              <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+                <div
+                  className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+                    isUrgent
+                      ? 'bg-rose-50 text-rose-700'
+                      : isWarning
+                      ? 'bg-amber-50 text-amber-700'
+                      : 'bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  {item.type === 'document' ? (
+                    <FolderLock className="w-5 h-5" />
+                  ) : item.type === 'subscription' ? (
+                    <CreditCard className="w-5 h-5" />
+                  ) : (
+                    <Receipt className="w-5 h-5" />
+                  )}
                 </div>
-                <span className="text-[11px] font-mono text-amber-400 font-semibold">
-                  {item.daysRemaining} days left
-                </span>
-              </div>
 
-              <div className="text-[11px] text-slate-400 flex items-center justify-between">
-                <span>Due: {item.date}</span>
-                {item.amount && <span className="font-mono text-slate-200">${item.amount.toFixed(2)}</span>}
-              </div>
-
-              <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
-                <button
-                  onClick={() => handleDownloadCalendarIcs(item)}
-                  className="text-xs text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1"
-                >
-                  <Calendar className="w-3 h-3" /> Sync (.ics)
-                </button>
-                <button
-                  onClick={() => handleMarkRenewed(item)}
-                  className="text-xs text-slate-300 hover:text-white font-medium"
-                >
-                  Mark Renewed
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Future Section (> 45 days) */}
-      {futureItems.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            <span>Future Renewals & Validities ({futureItems.length})</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {futureItems.map((item) => (
-              <div
-                key={item.id}
-                className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between"
-              >
-                <div>
-                  <h4 className="text-xs font-semibold text-white">{item.title}</h4>
-                  <p className="text-[11px] text-slate-400">
-                    {item.date} • <span className="text-emerald-400">{item.daysRemaining} days</span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-slate-900 truncate">{item.title}</h4>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-semibold uppercase">
+                      {item.type}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Category: <span className="text-slate-800 font-medium">{item.category}</span>
+                    {item.amount && <span> • Value: ${item.amount.toFixed(2)}</span>}
                   </p>
                 </div>
-                <button
-                  onClick={() => handleDownloadCalendarIcs(item)}
-                  className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
-                  title="Add to Calendar"
-                >
-                  <Calendar className="w-4 h-4" />
-                </button>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+
+              <div className="flex items-center justify-between md:justify-end gap-5 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+                <div className="text-left md:text-right">
+                  <span
+                    className={`text-xs px-2.5 py-1 rounded-full font-bold uppercase font-mono ${
+                      isUrgent
+                        ? 'bg-rose-100 text-rose-800'
+                        : isWarning
+                        ? 'bg-amber-100 text-amber-900'
+                        : 'bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    {item.daysRemaining} days left
+                  </span>
+                  <p className="text-[11px] text-slate-500 font-mono mt-1">Due Date: {item.date}</p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {/* Google Calendar export .ics */}
+                  <button
+                    onClick={() => handleDownloadCalendarIcs(item)}
+                    className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition flex items-center gap-1.5"
+                    title="Export to Google Calendar (.ics)"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Add to Calendar</span>
+                  </button>
+
+                  {/* Extend / Renew */}
+                  {item.type !== 'bill' && (
+                    <button
+                      onClick={() => handleQuickRenew1Year(item)}
+                      className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs transition"
+                      title="Extend validity by 1 year"
+                    >
+                      Renew +1 Yr
+                    </button>
+                  )}
+
+                  {/* Inspect Document */}
+                  {item.type === 'document' && (
+                    <button
+                      onClick={() => {
+                        const doc = documents.find((d) => d.id === item.id);
+                        if (doc) setPreviewDoc(doc);
+                      }}
+                      className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+                      title="Inspect Document"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

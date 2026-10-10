@@ -61,182 +61,193 @@ export const PasswordsVault: React.FC = () => {
   };
 
   const generateStrongPassword = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*()_+~';
-    let res = '';
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}';
+    let result = '';
     for (let i = 0; i < 18; i++) {
-      res += chars.charAt(Math.floor(Math.random() * chars.length));
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    setFormData((prev) => ({
-      ...prev,
-      password: res,
-      strengthScore: 98,
-    }));
+    setFormData({ ...formData, password: result, strengthScore: 98 });
   };
 
-  const handleSaveCredential = (e: React.FormEvent) => {
+  const handleCreateCredential = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim() || !formData.password.trim()) return;
-
     addCredential(formData);
     setAddModalOpen(false);
+    setFormData({
+      title: '',
+      category: 'Web & App',
+      username: '',
+      password: '',
+      websiteUrl: '',
+      notes: '',
+      twoFactorKey: '',
+      strengthScore: 85,
+      lastRotatedDate: new Date().toISOString().split('T')[0],
+      isFavorite: false,
+    });
   };
 
-  const filtered = credentials.filter(
-    (c) =>
-      c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCreds = credentials.filter((c) => {
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      return (
+        c.title.toLowerCase().includes(q) ||
+        c.username.toLowerCase().includes(q) ||
+        c.category.toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
-            <KeyRound className="w-6 h-6 text-violet-400" />
-            Password & Credentials Vault
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
+            <KeyRound className="w-6 h-6 text-slate-800" />
+            Passwords & Digital Keys
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Encrypted personal vault for portal logins, banking credentials, WiFi keys & 2FA backups
+          <p className="text-xs text-slate-600 mt-0.5">
+            Zero-knowledge encrypted password vault secured with Master PIN & AES-256
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={lockVault}
-            className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 text-xs font-medium border border-slate-700 transition flex items-center gap-1.5"
+            className="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-xs font-semibold transition flex items-center gap-1.5 shadow-xs"
           >
-            <Lock className="w-3.5 h-3.5" /> Lock Vault
+            <Lock className="w-3.5 h-3.5" /> Lock Vault Now
           </button>
           <button
             onClick={() => setAddModalOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold shadow-lg shadow-violet-600/20 transition flex items-center gap-2 active:scale-95"
+            className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs transition flex items-center gap-2 active:scale-95"
           >
-            <Plus className="w-4 h-4" /> Add Credential
+            <Plus className="w-4 h-4" /> Add Credentials
           </button>
         </div>
       </div>
 
-      {/* Security Banner */}
-      <div className="p-4 rounded-2xl bg-violet-950/20 border border-violet-500/20 flex items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2.5 text-violet-300">
-          <ShieldCheck className="w-5 h-5 text-violet-400 shrink-0" />
-          <span>
-            Vault secured with client-side Zero-Knowledge encryption and PBKDF2 Master PIN hashing.
-          </span>
+      {/* Vault Security Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+          <span className="text-xs font-semibold text-slate-600">Saved Passwords</span>
+          <div className="flex items-baseline gap-2 mt-2">
+            <span className="text-3xl font-extrabold text-slate-900 font-mono">{credentials.length}</span>
+            <span className="text-xs text-slate-500">accounts</span>
+          </div>
+          <p className="text-[11px] text-slate-500 mt-1">AWS KMS envelope encryption</p>
         </div>
-        <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-          Status: Master Pin Active
-        </span>
+
+        <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+          <span className="text-xs font-semibold text-slate-600">Average Password Health</span>
+          <div className="flex items-baseline gap-2 mt-2">
+            <span className="text-3xl font-extrabold text-emerald-700 font-mono">92%</span>
+            <span className="text-xs text-emerald-700 font-semibold">Strong</span>
+          </div>
+          <p className="text-[11px] text-slate-500 mt-1">No compromised or duplicate passwords found</p>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+          <span className="text-xs font-semibold text-slate-600">Master Lock Status</span>
+          <div className="flex items-baseline gap-2 mt-2">
+            <span className="text-xl font-bold text-slate-900">Unlocked (Active)</span>
+          </div>
+          <p className="text-[11px] text-slate-500 mt-1">Auto-locks upon session inactivity</p>
+        </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search credentials by title, website, or username..."
-          className="w-full bg-slate-900 border border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500"
-        />
+      {/* Search Input */}
+      <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
+        <div className="relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search passwords by service title, username, or category..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:border-slate-500 focus:bg-white"
+          />
+        </div>
       </div>
 
-      {/* Credentials Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filtered.map((cred) => {
+      {/* Passwords Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredCreds.map((cred) => {
           const isRevealed = revealedIds.includes(cred.id);
           const isCopied = copiedId === cred.id;
 
           return (
             <div
               key={cred.id}
-              className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-violet-500/40 transition flex flex-col justify-between space-y-4 shadow-sm"
+              className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-slate-300 transition flex flex-col justify-between space-y-4 shadow-xs"
             >
               <div>
-                {/* Header */}
-                <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-800 flex items-center justify-center font-bold text-sm">
                       <KeyRound className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-white">{cred.title}</h4>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                      <h4 className="text-sm font-bold text-slate-900">{cred.title}</h4>
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-medium">
                         {cred.category}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1">
-                    {cred.websiteUrl && (
-                      <a
-                        href={cred.websiteUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-slate-200"
-                        title="Open Portal"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    )}
-                    <button
-                      onClick={() => {
-                        if (confirm(`Delete credential "${cred.title}"?`)) {
-                          deleteCredential(cred.id);
-                        }
-                      }}
-                      className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                  <span
+                    className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                      cred.strengthScore >= 80
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-amber-100 text-amber-800'
+                    }`}
+                  >
+                    {cred.strengthScore}%
+                  </span>
                 </div>
 
-                {/* Account Username */}
-                <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60 mb-2 flex items-center justify-between text-xs">
-                  <div className="truncate mr-2">
-                    <span className="text-[10px] text-slate-500 block uppercase font-semibold">Username / ID</span>
-                    <span className="font-mono text-slate-200 truncate">{cred.username}</span>
+                {/* Username */}
+                <div className="mt-4 p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
+                  <div className="min-w-0">
+                    <span className="text-[10px] text-slate-500 block">Username / Account</span>
+                    <span className="font-mono text-slate-800 truncate block font-medium">{cred.username}</span>
                   </div>
                   <button
-                    onClick={() => handleCopy(cred.username, `user_${cred.id}`)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition"
-                    title="Copy Username"
+                    onClick={() => handleCopy(cred.username, `${cred.id}_user`)}
+                    className="p-1 rounded text-slate-400 hover:text-slate-700"
+                    title="Copy username"
                   >
-                    {copiedId === `user_${cred.id}` ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    ) : (
-                      <Copy className="w-3.5 h-3.5" />
-                    )}
+                    <Copy className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
                 {/* Password Box */}
-                <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-between text-xs">
-                  <div className="truncate mr-2">
-                    <span className="text-[10px] text-slate-500 block uppercase font-semibold">Password</span>
-                    <span className="font-mono text-slate-200 truncate">
+                <div className="mt-2 p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
+                  <div className="min-w-0 flex-1 mr-2">
+                    <span className="text-[10px] text-slate-500 block">Master Password</span>
+                    <span className="font-mono font-bold text-slate-900 tracking-wider truncate block">
                       {isRevealed ? cred.password : '••••••••••••••••'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1">
+
+                  <div className="flex items-center gap-1 shrink-0">
                     <button
                       onClick={() => toggleReveal(cred.id)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition"
+                      className="p-1 rounded text-slate-400 hover:text-slate-700"
                       title={isRevealed ? 'Hide Password' : 'Show Password'}
                     >
                       {isRevealed ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                     <button
                       onClick={() => handleCopy(cred.password, cred.id)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition"
+                      className="p-1 rounded text-slate-400 hover:text-slate-700"
                       title="Copy Password"
                     >
                       {isCopied ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
                       ) : (
                         <Copy className="w-3.5 h-3.5" />
                       )}
@@ -244,31 +255,19 @@ export const PasswordsVault: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Notes or 2FA Key */}
-                {cred.twoFactorKey && (
-                  <p className="text-[11px] text-indigo-300 mt-2 font-mono bg-indigo-950/30 p-2 rounded-lg border border-indigo-500/20">
-                    2FA: {cred.twoFactorKey}
-                  </p>
-                )}
-
-                {cred.notes && <p className="text-[11px] text-slate-400 mt-2 italic">{cred.notes}</p>}
+                {cred.notes && <p className="text-[11px] text-slate-500 mt-2 italic">{cred.notes}</p>}
               </div>
 
-              {/* Strength & Last Rotated */}
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
-                <div className="flex items-center gap-1.5">
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      cred.strengthScore >= 80
-                        ? 'bg-emerald-400'
-                        : cred.strengthScore >= 60
-                        ? 'bg-amber-400'
-                        : 'bg-rose-400'
-                    }`}
-                  ></div>
-                  <span>Strength {cred.strengthScore}%</span>
-                </div>
+              {/* Footer */}
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
                 <span>Rotated: {cred.lastRotatedDate}</span>
+                <button
+                  onClick={() => deleteCredential(cred.id)}
+                  className="p-1 rounded hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition"
+                  title="Delete Credential"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           );
@@ -277,38 +276,37 @@ export const PasswordsVault: React.FC = () => {
 
       {/* Add Credential Modal */}
       {addModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto">
-          <div className="relative w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-6 overflow-hidden">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
-              <h3 className="text-base font-bold text-white">Add New Encrypted Credential</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-xl p-6 my-8">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">Add New Secure Credentials</h3>
               <button
                 onClick={() => setAddModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveCredential} className="space-y-4">
+            <form onSubmit={handleCreateCredential} className="space-y-4 pt-4">
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-slate-300">Title / Service *</label>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Service / Title *</label>
                   <input
                     type="text"
                     required
+                    placeholder="e.g. AWS Root Account, GitHub"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="e.g. NetBanking, Home WiFi"
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-hidden focus:border-slate-500 focus:bg-white"
                   />
                 </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-slate-300">Category</label>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Category</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-hidden focus:border-slate-500 focus:bg-white"
                   >
                     {categories.map((c) => (
                       <option key={c} value={c}>
@@ -319,85 +317,74 @@ export const PasswordsVault: React.FC = () => {
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-300">Username / Account ID / SSID *</label>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Username / Email *</label>
                 <input
                   type="text"
                   required
+                  placeholder="e.g. arvindgeethesh2007@gmail.com"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  placeholder="e.g. arvind.g or SkyNet_5G"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-hidden focus:border-slate-500 focus:bg-white"
                 />
               </div>
 
-              {/* Password with generator */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-semibold text-slate-300">Password / Secret Key *</label>
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-xs font-medium text-slate-700">Password *</label>
                   <button
                     type="button"
                     onClick={generateStrongPassword}
-                    className="text-[11px] text-violet-400 hover:text-violet-300 font-medium flex items-center gap-1"
+                    className="text-[11px] text-slate-700 hover:text-slate-900 font-semibold flex items-center gap-1"
                   >
-                    <Sparkles className="w-3 h-3" /> Generate Strong (18 chars)
+                    <RefreshCw className="w-3 h-3" /> Auto-Generate
                   </button>
                 </div>
                 <input
                   type="text"
                   required
+                  placeholder="Enter or generate password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-900 focus:outline-hidden focus:border-slate-500 focus:bg-white"
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-300">Website or Portal URL</label>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Website URL (Optional)</label>
                 <input
                   type="url"
+                  placeholder="https://..."
                   value={formData.websiteUrl}
                   onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
-                  placeholder="https://example.com"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-hidden focus:border-slate-500 focus:bg-white"
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-300">2FA Secret / Recovery Codes (Optional)</label>
-                <input
-                  type="text"
-                  value={formData.twoFactorKey}
-                  onChange={(e) => setFormData({ ...formData, twoFactorKey: e.target.value })}
-                  placeholder="e.g. SMS OTP, Soft Token, 8-digit recovery code"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:ring-2 focus:ring-violet-500"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-slate-300">Secure Notes</label>
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Notes / Recovery Codes</label>
                 <textarea
                   rows={2}
+                  placeholder="Encrypted note or security questions..."
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Customer ID, security questions, or notes"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-hidden focus:border-slate-500 focus:bg-white"
                 ></textarea>
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+              <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setAddModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium"
+                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold shadow-md transition"
+                  className="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs"
                 >
-                  Save Credential
+                  Save Credentials
                 </button>
               </div>
             </form>

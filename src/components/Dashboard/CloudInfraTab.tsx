@@ -12,11 +12,12 @@ import {
   ArrowDown,
   RefreshCw,
   ExternalLink,
+  Code2,
 } from 'lucide-react';
 import { useVault } from '../../context/VaultContext';
 
 export const CloudInfraTab: React.FC = () => {
-  const { cloudState, documents, subscriptions, bills } = useVault();
+  const { cloudState, documents, subscriptions, bills, setActiveTab } = useVault();
   const [activeConsole, setActiveConsole] = useState<'s3' | 'rds' | 'cloudwatch' | 'ec2'>('ec2');
   const [sqlQuery, setSqlQuery] = useState("SELECT id, title, category, expiry_date FROM documents LIMIT 5;");
   const [queryOutput, setQueryOutput] = useState<any[] | null>(null);
@@ -47,231 +48,206 @@ export const CloudInfraTab: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
-            <Server className="w-6 h-6 text-cyan-400" />
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
+            <Server className="w-6 h-6 text-slate-800" />
             AWS Cloud Architecture & Health
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-600 mt-0.5">
             Live operational status of Amazon EC2, Amazon S3, Amazon RDS PostgreSQL, and AWS CloudWatch
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-mono px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            All 4 Services Healthy
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setActiveTab('java_backend')}
+            className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-orange-50 text-orange-800 border border-orange-200 hover:bg-orange-100 flex items-center gap-1.5 transition shadow-xs"
+          >
+            <Code2 className="w-3.5 h-3.5 text-orange-600" />
+            <span>Java Backend (.java)</span>
+          </button>
+
+          <span className="text-xs font-mono px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5 font-semibold">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            ALL AWS SERVICES HEALTHY
           </span>
         </div>
       </div>
 
-      {/* 4 Cloud Nodes Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* EC2 */}
-        <div
-          onClick={() => setActiveConsole('ec2')}
-          className={`p-5 rounded-2xl border transition cursor-pointer ${
-            activeConsole === 'ec2'
-              ? 'bg-indigo-950/40 border-indigo-500/60 shadow-lg'
-              : 'bg-slate-900 border-slate-800 hover:border-slate-700'
-          }`}
-        >
-          <div className="flex items-center justify-between text-slate-400 mb-3">
-            <span className="text-xs font-semibold uppercase">Amazon EC2</span>
-            <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
-              <Server className="w-4 h-4" />
-            </div>
-          </div>
-          <p className="text-xl font-bold font-mono text-white">t3.medium</p>
-          <p className="text-[11px] text-slate-400 mt-1 font-mono">{cloudState.ec2InstanceId}</p>
-          <div className="mt-3 flex items-center justify-between text-[11px]">
-            <span className="text-slate-400">CPU Usage</span>
-            <span className="font-mono text-emerald-400 font-semibold">{cloudState.ec2CpuUsage}%</span>
-          </div>
-        </div>
+      {/* Cloud Nodes Diagram */}
+      <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-6">
+        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+          Cloud Infrastructure Topology (ap-south-1 Mumbai)
+        </h3>
 
-        {/* S3 */}
-        <div
-          onClick={() => setActiveConsole('s3')}
-          className={`p-5 rounded-2xl border transition cursor-pointer ${
-            activeConsole === 's3'
-              ? 'bg-emerald-950/40 border-emerald-500/60 shadow-lg'
-              : 'bg-slate-900 border-slate-800 hover:border-slate-700'
-          }`}
-        >
-          <div className="flex items-center justify-between text-slate-400 mb-3">
-            <span className="text-xs font-semibold uppercase">Amazon S3</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-              <HardDrive className="w-4 h-4" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* EC2 Card */}
+          <div
+            onClick={() => setActiveConsole('ec2')}
+            className={`p-4 rounded-xl border transition cursor-pointer ${
+              activeConsole === 'ec2'
+                ? 'bg-slate-50 border-slate-900 ring-2 ring-slate-900'
+                : 'bg-white border-slate-200 hover:border-slate-300'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-slate-900 flex items-center gap-2">
+                <Cpu className="w-4 h-4 text-slate-700" /> Amazon EC2 Host
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                Running
+              </span>
             </div>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Instance: <span className="font-mono text-slate-900">t3.medium</span>
+              <br />
+              Public IP: <span className="font-mono text-slate-900">13.233.109.42</span>
+              <br />
+              Node.js v22 & Express Server (Port 3000)
+            </p>
           </div>
-          <p className="text-xl font-bold font-mono text-white">{cloudState.s3StorageSizeMb} MB</p>
-          <p className="text-[11px] text-slate-400 mt-1">{documents.length} Encrypted Objects</p>
-          <div className="mt-3 flex items-center justify-between text-[11px]">
-            <span className="text-slate-400">Security</span>
-            <span className="font-mono text-emerald-400 font-semibold">SSE-KMS</span>
-          </div>
-        </div>
 
-        {/* RDS */}
-        <div
-          onClick={() => setActiveConsole('rds')}
-          className={`p-5 rounded-2xl border transition cursor-pointer ${
-            activeConsole === 'rds'
-              ? 'bg-cyan-950/40 border-cyan-500/60 shadow-lg'
-              : 'bg-slate-900 border-slate-800 hover:border-slate-700'
-          }`}
-        >
-          <div className="flex items-center justify-between text-slate-400 mb-3">
-            <span className="text-xs font-semibold uppercase">Amazon RDS</span>
-            <div className="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
-              <Database className="w-4 h-4" />
+          {/* S3 Card */}
+          <div
+            onClick={() => setActiveConsole('s3')}
+            className={`p-4 rounded-xl border transition cursor-pointer ${
+              activeConsole === 's3'
+                ? 'bg-slate-50 border-slate-900 ring-2 ring-slate-900'
+                : 'bg-white border-slate-200 hover:border-slate-300'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-slate-900 flex items-center gap-2">
+                <HardDrive className="w-4 h-4 text-slate-700" /> Amazon S3 Bucket
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                Encrypted
+              </span>
             </div>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Bucket: <span className="font-mono text-slate-900">lifevault-s3-ap-south-1</span>
+              <br />
+              KMS Key: <span className="font-mono text-slate-900">arn:aws:kms:lifevault</span>
+              <br />
+              Versioning & Server-Side Encryption (AES-256)
+            </p>
           </div>
-          <p className="text-xl font-bold font-mono text-white">PostgreSQL 16</p>
-          <p className="text-[11px] text-slate-400 mt-1">Multi-AZ Deployment</p>
-          <div className="mt-3 flex items-center justify-between text-[11px]">
-            <span className="text-slate-400">Pool Connections</span>
-            <span className="font-mono text-cyan-400 font-semibold">{cloudState.rdsConnections} active</span>
-          </div>
-        </div>
 
-        {/* CloudWatch */}
-        <div
-          onClick={() => setActiveConsole('cloudwatch')}
-          className={`p-5 rounded-2xl border transition cursor-pointer ${
-            activeConsole === 'cloudwatch'
-              ? 'bg-amber-950/40 border-amber-500/60 shadow-lg'
-              : 'bg-slate-900 border-slate-800 hover:border-slate-700'
-          }`}
-        >
-          <div className="flex items-center justify-between text-slate-400 mb-3">
-            <span className="text-xs font-semibold uppercase">AWS CloudWatch</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
-              <Activity className="w-4 h-4" />
+          {/* RDS Card */}
+          <div
+            onClick={() => setActiveConsole('rds')}
+            className={`p-4 rounded-xl border transition cursor-pointer ${
+              activeConsole === 'rds'
+                ? 'bg-slate-50 border-slate-900 ring-2 ring-slate-900'
+                : 'bg-white border-slate-200 hover:border-slate-300'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-slate-900 flex items-center gap-2">
+                <Database className="w-4 h-4 text-slate-700" /> Amazon RDS PostgreSQL
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                Available
+              </span>
             </div>
-          </div>
-          <p className="text-xl font-bold font-mono text-emerald-400">0 Alarms</p>
-          <p className="text-[11px] text-slate-400 mt-1">Status: OK</p>
-          <div className="mt-3 flex items-center justify-between text-[11px]">
-            <span className="text-slate-400">Log Ingestion</span>
-            <span className="font-mono text-amber-400 font-semibold">{cloudState.cloudWatchLogRate}</span>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Engine: <span className="font-mono text-slate-900">PostgreSQL 16.2</span>
+              <br />
+              Multi-AZ Replication Enabled
+              <br />
+              Automated daily snapshots at 02:00 UTC
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Selected Console Deep Dive */}
-      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-        {activeConsole === 'ec2' && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div>
-                <h3 className="text-sm font-bold text-white">Amazon EC2 Compute Environment</h3>
-                <p className="text-xs text-slate-400">
-                  Virtual server hosting Spring Boot / Express application core & Gemini AI model connector
-                </p>
-              </div>
-              <span className="text-xs font-mono text-emerald-400">Uptime: {cloudState.ec2Uptime}</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
-              <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700">
-                <span className="text-slate-500 block text-[10px]">Architecture</span>
-                <span className="text-white font-bold">Linux x86_64 (Ubuntu 24.04 LTS)</span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700">
-                <span className="text-slate-500 block text-[10px]">Cloud Region</span>
-                <span className="text-white font-bold">{cloudState.ec2Region}</span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700">
-                <span className="text-slate-500 block text-[10px]">Security Group</span>
-                <span className="text-white font-bold">sg-lifevault-prod (Port 3000, 443)</span>
-              </div>
-            </div>
+      {/* Interactive Sub-Console */}
+      <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2">
+            <Terminal className="w-4 h-4 text-slate-700" />
+            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+              {activeConsole === 'rds'
+                ? 'RDS PostgreSQL Query Sandbox'
+                : activeConsole === 's3'
+                ? 'Amazon S3 Object Explorer'
+                : activeConsole === 'ec2'
+                ? 'EC2 Host Runtime Diagnostics'
+                : 'AWS CloudWatch Stream'}
+            </h4>
           </div>
-        )}
+          <span className="text-[11px] font-mono text-slate-500">Live Connection</span>
+        </div>
 
-        {activeConsole === 's3' && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div>
-                <h3 className="text-sm font-bold text-white">Amazon S3 Encrypted Object Store</h3>
-                <p className="text-xs text-slate-400">
-                  Pre-signed URLs with TLS 1.3 time-limited tokens ensuring private access
-                </p>
-              </div>
-              <span className="text-xs font-mono text-emerald-400">KMS Key: arn:aws:kms:lifevault</span>
-            </div>
-
-            <div className="divide-y divide-slate-800 max-h-60 overflow-y-auto">
-              {documents.map((d) => (
-                <div key={d.id} className="py-2.5 flex items-center justify-between text-xs font-mono">
-                  <div className="truncate mr-4">
-                    <span className="text-cyan-400">s3://lifevault-digital-assets-prod/</span>
-                    <span className="text-white">{d.s3Key}</span>
-                  </div>
-                  <span className="text-slate-400 shrink-0">{d.fileSize}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
+        {/* If RDS Console */}
         {activeConsole === 'rds' && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div>
-                <h3 className="text-sm font-bold text-white">Amazon RDS PostgreSQL SQL Query Console</h3>
-                <p className="text-xs text-slate-400">
-                  Structured tables for users, documents, subscriptions, and family ACL permissions
-                </p>
-              </div>
-              <span className="text-xs font-mono text-indigo-400">Engine: PostgreSQL 16.3</span>
-            </div>
-
+          <div className="space-y-3">
             <div className="flex gap-2">
               <input
                 type="text"
                 value={sqlQuery}
                 onChange={(e) => setSqlQuery(e.target.value)}
-                className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs font-mono text-emerald-400 focus:outline-none"
+                className="flex-1 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs text-slate-900 focus:outline-hidden focus:border-slate-500 focus:bg-white"
               />
               <button
                 onClick={handleRunSql}
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition"
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold"
               >
-                Execute
+                Execute SQL
               </button>
             </div>
 
             {queryOutput && (
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono text-[11px] text-slate-300 overflow-x-auto">
+              <div className="rounded-xl bg-slate-50 p-3 font-mono text-[11px] border border-slate-200 overflow-x-auto text-slate-800">
                 <pre>{JSON.stringify(queryOutput, null, 2)}</pre>
               </div>
             )}
           </div>
         )}
 
-        {activeConsole === 'cloudwatch' && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div>
-                <h3 className="text-sm font-bold text-white">AWS CloudWatch Live Log Ingestion</h3>
-                <p className="text-xs text-slate-400">
-                  Real-time monitoring stream of backend transactions and expiry cron jobs
-                </p>
-              </div>
-              <span className="text-xs font-mono text-amber-400">Alarm Status: Nominal</span>
-            </div>
-
-            <div className="space-y-1.5 font-mono text-xs bg-slate-950 p-4 rounded-xl border border-slate-800 max-h-60 overflow-y-auto">
-              {logs.map((log, idx) => (
-                <div key={idx} className="flex items-start gap-2 text-[11px]">
-                  <span className="text-slate-500">{log.time}</span>
-                  <span className="text-cyan-400">[{log.service}]</span>
-                  <span className="text-slate-300">{log.msg}</span>
+        {/* If S3 Console */}
+        {activeConsole === 's3' && (
+          <div className="rounded-xl border border-slate-200 overflow-hidden divide-y divide-slate-100">
+            {documents.slice(0, 6).map((doc) => (
+              <div key={doc.id} className="p-3 bg-white flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2.5">
+                  <HardDrive className="w-4 h-4 text-slate-500" />
+                  <div>
+                    <span className="font-mono text-slate-900 font-semibold">{doc.s3Key}</span>
+                    <span className="block text-[10px] text-slate-500 font-mono">
+                      SSE-KMS • Size: {doc.fileSize}
+                    </span>
+                  </div>
                 </div>
-              ))}
-            </div>
+                <span className="font-mono text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-medium border border-emerald-200">
+                  HTTP 200 OK
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* If EC2 Console */}
+        {activeConsole === 'ec2' && (
+          <div className="rounded-xl bg-slate-50 p-4 font-mono text-xs space-y-2 border border-slate-200 text-slate-800">
+            <p className="text-emerald-700 font-semibold">● Instance State: running (2/2 status checks passed)</p>
+            <p>CPU Utilization: 14.2% across 2 vCPUs</p>
+            <p>Memory Usage: 1.1 GB / 4.0 GB (28%)</p>
+            <p>Network In/Out: 42.1 MB / 18.6 MB</p>
+            <p>EBS Root Volume: /dev/xvda (20 GB gp3 SSD, 82% free)</p>
+            <p>OS: Amazon Linux 2023 with Systemd Supervisor</p>
+          </div>
+        )}
+
+        {/* If CloudWatch */}
+        {activeConsole === 'cloudwatch' && (
+          <div className="rounded-xl bg-slate-50 p-3 font-mono text-[11px] space-y-1.5 border border-slate-200 text-slate-700">
+            {logs.map((log, idx) => (
+              <div key={idx} className="flex gap-2">
+                <span className="text-slate-400">{log.time}</span>
+                <span className="text-slate-900 font-semibold">{log.service}</span>
+                <span>{log.msg}</span>
+              </div>
+            ))}
           </div>
         )}
       </div>

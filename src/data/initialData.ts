@@ -21,6 +21,13 @@ export const INITIAL_USER: UserProfile = {
   currencyPreference: 'USD',
   role: 'owner',
   accessLevel: 'Owner',
+  sessionToken: 'gl_sec_99f2e81d77a281c3b690',
+  tokenExpiresAt: new Date(Date.now() + 86400000).toISOString(),
+  twoFactorEnabled: true,
+  securityLevel: 'High (2FA Enforced)',
+  lastLoginAt: new Date().toISOString(),
+  authProvider: 'google',
+  verifiedEmail: true,
 };
 
 export const INITIAL_DOCUMENTS: DocumentRecord[] = [

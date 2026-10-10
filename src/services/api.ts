@@ -110,3 +110,63 @@ export async function runVaultAudit(vaultData: any): Promise<AuditResponse> {
   }
   return res.json();
 }
+
+export interface GoogleAuthResponse {
+  success: boolean;
+  message: string;
+  session: {
+    token: string;
+    tokenType: string;
+    algorithm: string;
+    issuedAt: string;
+    expiresAt: string;
+    encryption: string;
+    securityLevel: string;
+    verifiedEmail: boolean;
+  };
+  user: {
+    name: string;
+    email: string;
+    googleSubId: string;
+    avatar: string;
+    role: 'owner' | 'family_member';
+    accessLevel: 'Owner' | 'View Only' | 'Download' | 'Full Access';
+    authProvider: 'google' | 'google_workspace';
+  };
+}
+
+export async function verifyGoogleAuth(payload: {
+  email: string;
+  name?: string;
+  idToken?: string;
+  twoFactorCode?: string;
+  role?: string;
+}): Promise<GoogleAuthResponse> {
+  const res = await fetch('/api/auth/google/verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || `Authentication failed: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function verify2FACode(payload: {
+  code: string;
+  email: string;
+}): Promise<{ success: boolean; message: string; securityLevel: string }> {
+  const res = await fetch('/api/auth/2fa/verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || `2FA verification failed: ${res.statusText}`);
+  }
+  return res.json();
+}
+

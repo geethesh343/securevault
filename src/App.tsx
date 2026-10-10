@@ -10,6 +10,7 @@ import { BillsInvoicesManager } from './components/Dashboard/BillsInvoicesManage
 import { PasswordsVault } from './components/Dashboard/PasswordsVault';
 import { FamilyAccessManager } from './components/Dashboard/FamilyAccessManager';
 import { CloudInfraTab } from './components/Dashboard/CloudInfraTab';
+import { JavaBackendTab } from './components/Dashboard/JavaBackendTab';
 
 import { UploadOcrModal } from './components/Modals/UploadOcrModal';
 import { AiSmartSearchModal } from './components/Modals/AiSmartSearchModal';
@@ -33,7 +34,7 @@ const VaultDashboardContent: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-slate-900 selection:text-white">
       {/* Top Navbar */}
       <Navbar />
 
@@ -46,23 +47,23 @@ const VaultDashboardContent: React.FC = () => {
         {mobileMenuOpen && (
           <div
             onClick={() => setMobileMenuOpen(false)}
-            className="fixed inset-0 z-20 bg-slate-950/70 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-20 bg-slate-900/40 backdrop-blur-sm lg:hidden"
           ></div>
         )}
 
         {/* Dynamic Main Workspace */}
         <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">
           {/* Mobile menu trigger */}
-          <div className="lg:hidden flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
+          <div className="lg:hidden flex items-center justify-between pb-4 mb-4 border-b border-slate-200">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 flex items-center gap-2 text-xs font-semibold"
+              className="p-2 rounded-xl bg-white border border-slate-200 text-slate-700 shadow-xs flex items-center gap-2 text-xs font-semibold hover:bg-slate-50"
             >
               <Menu className="w-4 h-4" /> Menu & Navigation
             </button>
             <button
               onClick={() => setUploadModalOpen(true)}
-              className="p-2 rounded-xl bg-blue-600 text-white flex items-center gap-1.5 text-xs font-semibold"
+              className="p-2 rounded-xl bg-slate-900 text-white flex items-center gap-1.5 text-xs font-semibold hover:bg-slate-800 shadow-sm"
             >
               <Plus className="w-4 h-4" /> Upload
             </button>
@@ -76,6 +77,7 @@ const VaultDashboardContent: React.FC = () => {
           {activeTab === 'passwords' && <PasswordsVault />}
           {activeTab === 'family' && <FamilyAccessManager />}
           {activeTab === 'cloud' && <CloudInfraTab />}
+          {activeTab === 'java_backend' && <JavaBackendTab />}
         </main>
       </div>
 
@@ -83,10 +85,10 @@ const VaultDashboardContent: React.FC = () => {
       <div className="fixed bottom-6 right-6 z-30 lg:hidden">
         <button
           onClick={() => setChatAssistantOpen(true)}
-          className="w-13 h-13 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-xl shadow-indigo-600/30 flex items-center justify-center transition active:scale-95 border border-indigo-400/30"
+          className="w-13 h-13 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-900/20 flex items-center justify-center transition active:scale-95 border border-slate-700"
           title="Ask LifeVault AI"
         >
-          <Sparkles className="w-6 h-6" />
+          <Sparkles className="w-6 h-6 text-amber-300" />
         </button>
       </div>
 
