@@ -1,0 +1,124 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account profile and vault security settings",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique user ID" },
+        "name": { "type": "string", "description": "Full name of the user" },
+        "email": { "type": "string", "format": "email", "description": "Email address" },
+        "avatar": { "type": "string", "description": "Avatar URL or icon" },
+        "role": { "type": "string", "enum": ["owner", "family_member"], "description": "Vault access role" },
+        "storageUsedMb": { "type": "number", "description": "Megabytes of storage used" },
+        "storageLimitMb": { "type": "number", "description": "Megabytes storage quota" },
+        "twoFactorEnabled": { "type": "boolean", "description": "Whether 2FA is active" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "email", "role"]
+    },
+    "DocumentRecord": {
+      "title": "DocumentRecord",
+      "description": "Stored digital identity, insurance, deed, tax, or legal document",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Document unique ID" },
+        "ownerId": { "type": "string", "description": "Firebase UID or account ID of owner" },
+        "title": { "type": "string", "description": "Document name or title" },
+        "category": { "type": "string", "description": "Document category" },
+        "fileName": { "type": "string", "description": "File name" },
+        "fileType": { "type": "string", "description": "File MIME type or extension" },
+        "fileSize": { "type": "string", "description": "File size label" },
+        "storagePath": { "type": "string", "description": "Path in cloud document storage" },
+        "storageUrl": { "type": "string", "description": "Cloud object storage URL" },
+        "ocrSummary": { "type": "string", "description": "AI OCR extraction summary" },
+        "verifiedStatus": { "type": "string", "enum": ["Verified", "Pending", "Needs Review"] },
+        "isFavorite": { "type": "boolean", "description": "Whether starred by user" },
+        "tags": { "type": "array", "description": "Associated metadata tags" },
+        "sharedWithFamilyIds": { "type": "array", "description": "List of family member IDs with access" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "category"]
+    },
+    "SubscriptionRecord": {
+      "title": "SubscriptionRecord",
+      "description": "Recurring digital service subscription",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Subscription unique ID" },
+        "ownerId": { "type": "string", "description": "Firebase UID of owner" },
+        "serviceName": { "type": "string", "description": "Service name" },
+        "provider": { "type": "string", "description": "Vendor or company" },
+        "category": { "type": "string", "description": "Subscription category" },
+        "cost": { "type": "number", "description": "Billing amount" },
+        "currency": { "type": "string", "description": "ISO currency code" },
+        "billingCycle": { "type": "string", "enum": ["Monthly", "Yearly", "Quarterly"] },
+        "nextRenewalDate": { "type": "string", "description": "Upcoming charge date" },
+        "paymentMethod": { "type": "string", "description": "Payment card or account" },
+        "autoRenew": { "type": "boolean" },
+        "remindersEnabled": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "serviceName", "cost"]
+    },
+    "BillRecord": {
+      "title": "BillRecord",
+      "description": "Household or utility invoice and due date item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Bill unique ID" },
+        "ownerId": { "type": "string", "description": "Owner ID" },
+        "title": { "type": "string", "description": "Bill description" },
+        "biller": { "type": "string", "description": "Utility or billing entity" },
+        "category": { "type": "string", "description": "Expense category" },
+        "amount": { "type": "number", "description": "Bill amount" },
+        "currency": { "type": "string", "description": "Currency code" },
+        "dueDate": { "type": "string", "description": "Due date" },
+        "status": { "type": "string", "enum": ["Pending", "Paid", "Overdue"] },
+        "recurring": { "type": "boolean" }
+      },
+      "required": ["id", "title", "amount", "dueDate", "status"]
+    },
+    "CloudStorageFile": {
+      "title": "CloudStorageFile",
+      "description": "Document stored in Cloud Document Storage with integrity check",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Object identifier" },
+        "name": { "type": "string", "description": "File name" },
+        "mimeType": { "type": "string", "description": "Content type" },
+        "sizeBytes": { "type": "number", "description": "File size in bytes" },
+        "sha256": { "type": "string", "description": "Cryptographic checksum" },
+        "storageBucket": { "type": "string", "description": "Cloud bucket name" },
+        "uploadedBy": { "type": "string", "description": "Uploader email or UID" },
+        "uploadedAt": { "type": "string", "format": "date-time" },
+        "dataUri": { "type": "string", "description": "Encrypted Base64 document payload or pre-signed URL" }
+      },
+      "required": ["id", "name", "sizeBytes"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile and security state"
+    },
+    "/documents/{documentId}": {
+      "schema": { "$ref": "#/entities/DocumentRecord" },
+      "description": "Encrypted digital documents and metadata"
+    },
+    "/subscriptions/{subscriptionId}": {
+      "schema": { "$ref": "#/entities/SubscriptionRecord" },
+      "description": "Tracked user subscriptions"
+    },
+    "/bills/{billId}": {
+      "schema": { "$ref": "#/entities/BillRecord" },
+      "description": "Household bills and utility reminders"
+    },
+    "/cloudStorageFiles/{fileId}": {
+      "schema": { "$ref": "#/entities/CloudStorageFile" },
+      "description": "Cloud document storage objects and metadata"
+    }
+  }
+}

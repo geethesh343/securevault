@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global security helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Test ping collection for connectivity validation
+    match /test/{docId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // User profiles & security credentials
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isOwner(userId) && request.resource.data.id == userId;
+      allow delete: if isOwner(userId);
+    }
+
+    // Vault digital documents
+    match /documents/{documentId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(documentId);
+      allow update: if isSignedIn() && isValidId(documentId);
+      allow delete: if isSignedIn();
+    }
+
+    // Recurring subscriptions
+    match /subscriptions/{subscriptionId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(subscriptionId);
+      allow update: if isSignedIn() && isValidId(subscriptionId);
+      allow delete: if isSignedIn();
+    }
+
+    // Bills and financial obligations
+    match /bills/{billId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(billId);
+      allow update: if isSignedIn() && isValidId(billId);
+      allow delete: if isSignedIn();
+    }
+
+    // Cloud document storage files and hashes
+    match /cloudStorageFiles/{fileId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(fileId);
+      allow update: if isSignedIn() && isValidId(fileId);
+      allow delete: if isSignedIn();
+    }
+  }
+}

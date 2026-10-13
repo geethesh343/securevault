@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  ShieldCheck,
   Plus,
   Sparkles,
   FolderLock,
@@ -16,7 +15,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   Clock,
-  Code2,
 } from 'lucide-react';
 import { useVault } from '../../context/VaultContext';
 import { INITIAL_USER } from '../../data/initialData';
@@ -97,10 +95,6 @@ export const OverviewTab: React.FC = () => {
       <div className="relative overflow-hidden rounded-3xl bg-white border border-slate-200/90 shadow-sm p-6 sm:p-8">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold tracking-wide">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>AWS Cloud Infrastructure • S3 Bucket & RDS PostgreSQL Active</span>
-            </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-[1.12] flex flex-wrap items-center gap-x-3 gap-y-1">
               <span>Welcome to LifeVault</span>
               <span className="inline-flex items-center text-slate-900 font-extrabold">
@@ -219,16 +213,6 @@ export const OverviewTab: React.FC = () => {
             >
               <Plus className="w-3.5 h-3.5 text-sky-600" />
               <span>Sign In Any Google Mail</span>
-            </button>
-
-            {/* Java Backend Explorer */}
-            <button
-              onClick={() => setActiveTab('java_backend')}
-              className="px-2.5 py-1 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 text-xs font-semibold border border-orange-200 transition flex items-center gap-1.5 shadow-xs"
-              title="Explore Complete Java 21 & Spring Boot Backend Source Files"
-            >
-              <Code2 className="w-3.5 h-3.5 text-orange-600" />
-              <span>Java Backend (.java)</span>
             </button>
           </div>
         </div>

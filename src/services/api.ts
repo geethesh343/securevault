@@ -94,7 +94,8 @@ export async function chatWithVault(payload: {
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
-    throw new Error(`Chat assistant failed: ${res.statusText}`);
+    const errorData = await res.json().catch(() => null);
+    throw new Error(`Chat assistant failed: ${errorData?.error || res.statusText || 'Unable to contact assistant'}`);
   }
   return res.json();
 }
