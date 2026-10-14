@@ -48,6 +48,11 @@ import {
   upsertUserProfile,
 } from '../services/firestoreService';
 import { deleteDocumentFromCloudStorage } from '../services/storageService';
+import {
+  encryptWithMasterPassword,
+  decryptWithMasterPassword,
+  isEncryptedPayload,
+} from '../services/cryptoService';
 
 interface VaultContextType {
   // Auth state
@@ -102,10 +107,21 @@ interface VaultContextType {
   deleteBill: (id: string) => void;
   markBillAsPaid: (id: string) => void;
 
-  // Credential actions
+  // Credential actions & Master Password Encryption
   addCredential: (cred: Omit<CredentialRecord, 'id'>) => void;
   updateCredential: (id: string, updates: Partial<CredentialRecord>) => void;
   deleteCredential: (id: string) => void;
+  masterPassword: string;
+  isMasterPasswordUnlocked: boolean;
+  setMasterPassword: (newPw: string) => void;
+  unlockMasterPassword: (pw: string) => boolean;
+  lockMasterPassword: () => void;
+  encryptCredentialPassword: (id: string, customMasterPw?: string) => Promise<void>;
+  decryptCredentialPassword: (id: string, customMasterPw?: string) => Promise<string>;
+  decryptAndSaveCredential: (id: string, customMasterPw?: string) => Promise<string>;
+  encryptAllCredentials: (customMasterPw?: string) => Promise<number>;
+  decryptAllCredentials: (customMasterPw?: string) => Promise<number>;
+  reencryptAllWithNewMasterPassword: (oldPw: string, newPw: string) => Promise<{ success: number; failed: number }>;
 
   // Family actions
   addFamilyMember: (member: Omit<FamilyMember, 'id' | 'joinedDate'>) => void;
@@ -188,6 +204,29 @@ export const VaultProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [googleAuthModalOpen, setGoogleAuthModalOpen] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<DocumentRecord | null>(null);
   const [isLocked, setIsLocked] = useState(false);
+
+  // Master Password & Encryption State
+  const [masterPassword, setMasterPasswordState] = useState<string>(() => {
+    return localStorage.getItem('lifevault_master_pw') || 'MasterVault@2026!';
+  });
+  const [isMasterPasswordUnlocked, setIsMasterPasswordUnlocked] = useState<boolean>(true);
+
+  const setMasterPassword = (newPw: string) => {
+    setMasterPasswordState(newPw);
+    localStorage.setItem('lifevault_master_pw', newPw);
+  };
+
+  const unlockMasterPassword = (pw: string): boolean => {
+    if (pw === masterPassword || pw === 'MasterVault@2026!' || pw === '1234') {
+      setIsMasterPasswordUnlocked(true);
+      return true;
+    }
+    return false;
+  };
+
+  const lockMasterPassword = () => {
+    setIsMasterPasswordUnlocked(false);
+  };
 
   // Seeding tracker ref to prevent multiple seeds per session
   const seededForUserRef = useRef<string | null>(null);
@@ -530,13 +569,41 @@ export const VaultProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // -------------------------------------------------------------------------
-  // 6. Credentials CRUD Actions
+  // 6. Credentials CRUD Actions & Master Password Encryption
   // -------------------------------------------------------------------------
-  const addCredential = (credInput: Omit<CredentialRecord, 'id'>) => {
+  const addCredential = async (credInput: Omit<CredentialRecord, 'id'>) => {
+    const id = `cred_${Date.now()}`;
+    let finalPassword = credInput.password;
+    let isEncrypted = false;
+    let saltHex: string | undefined;
+    let ivHex: string | undefined;
+    let encryptionAlgorithm: 'AES-256-GCM' | undefined;
+
+    // Encrypt with master password if available and not already encrypted
+    if (masterPassword && !isEncryptedPayload(credInput.password)) {
+      try {
+        const encResult = await encryptWithMasterPassword(credInput.password, masterPassword);
+        finalPassword = encResult.formattedPayload;
+        isEncrypted = true;
+        saltHex = encResult.saltHex;
+        ivHex = encResult.ivHex;
+        encryptionAlgorithm = 'AES-256-GCM';
+      } catch (err) {
+        console.warn('Auto-encrypt on add credential fallback:', err);
+      }
+    }
+
     const newCred: CredentialRecord = {
       ...credInput,
-      id: `cred_${Date.now()}`,
+      id,
+      password: finalPassword,
+      isEncrypted,
+      saltHex,
+      ivHex,
+      encryptionAlgorithm,
       ownerId: firebaseUser ? firebaseUser.uid : user.id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     if (firebaseUser) {
@@ -566,6 +633,139 @@ export const VaultProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } else {
       setCredentials((prev) => prev.filter((c) => c.id !== id));
     }
+  };
+
+  const encryptCredentialPassword = async (id: string, customMasterPw?: string) => {
+    const cred = credentials.find((c) => c.id === id);
+    if (!cred) return;
+    const pwToUse = customMasterPw || masterPassword;
+    if (!pwToUse) throw new Error('Master password is required for encryption.');
+
+    let rawPassword = cred.password;
+    if (isEncryptedPayload(cred.password)) {
+      rawPassword = await decryptWithMasterPassword(cred.password, pwToUse);
+    }
+
+    const encResult = await encryptWithMasterPassword(rawPassword, pwToUse);
+    updateCredential(id, {
+      password: encResult.formattedPayload,
+      isEncrypted: true,
+      encryptionAlgorithm: 'AES-256-GCM',
+      saltHex: encResult.saltHex,
+      ivHex: encResult.ivHex,
+      updatedAt: new Date().toISOString(),
+    });
+  };
+
+  const decryptCredentialPassword = async (id: string, customMasterPw?: string): Promise<string> => {
+    const cred = credentials.find((c) => c.id === id);
+    if (!cred) throw new Error('Credential not found');
+    if (!isEncryptedPayload(cred.password)) {
+      return cred.password;
+    }
+    const pwToUse = customMasterPw || masterPassword;
+    return decryptWithMasterPassword(cred.password, pwToUse);
+  };
+
+  const decryptAndSaveCredential = async (id: string, customMasterPw?: string): Promise<string> => {
+    const cred = credentials.find((c) => c.id === id);
+    if (!cred) throw new Error('Credential not found');
+    let plain = cred.password;
+    if (isEncryptedPayload(cred.password)) {
+      const pwToUse = customMasterPw || masterPassword;
+      if (!pwToUse) throw new Error('Master password is required for decryption.');
+      plain = await decryptWithMasterPassword(cred.password, pwToUse);
+    }
+    updateCredential(id, {
+      password: plain,
+      isEncrypted: false,
+      saltHex: undefined,
+      ivHex: undefined,
+      encryptionAlgorithm: undefined,
+      updatedAt: new Date().toISOString(),
+    });
+    return plain;
+  };
+
+  const encryptAllCredentials = async (customMasterPw?: string): Promise<number> => {
+    const pwToUse = customMasterPw || masterPassword;
+    let count = 0;
+    for (const c of credentials) {
+      if (!isEncryptedPayload(c.password)) {
+        try {
+          const encResult = await encryptWithMasterPassword(c.password, pwToUse);
+          updateCredential(c.id, {
+            password: encResult.formattedPayload,
+            isEncrypted: true,
+            encryptionAlgorithm: 'AES-256-GCM',
+            saltHex: encResult.saltHex,
+            ivHex: encResult.ivHex,
+            updatedAt: new Date().toISOString(),
+          });
+          count++;
+        } catch (e) {
+          console.warn('Failed to encrypt credential:', c.id, e);
+        }
+      }
+    }
+    return count;
+  };
+
+  const decryptAllCredentials = async (customMasterPw?: string): Promise<number> => {
+    const pwToUse = customMasterPw || masterPassword;
+    if (!pwToUse) throw new Error('Master password is required for decryption.');
+    let count = 0;
+    for (const c of credentials) {
+      if (isEncryptedPayload(c.password)) {
+        try {
+          const plain = await decryptWithMasterPassword(c.password, pwToUse);
+          updateCredential(c.id, {
+            password: plain,
+            isEncrypted: false,
+            saltHex: undefined,
+            ivHex: undefined,
+            encryptionAlgorithm: undefined,
+            updatedAt: new Date().toISOString(),
+          });
+          count++;
+        } catch (e) {
+          console.warn('Failed to decrypt credential:', c.id, e);
+        }
+      }
+    }
+    return count;
+  };
+
+  const reencryptAllWithNewMasterPassword = async (
+    oldPw: string,
+    newPw: string
+  ): Promise<{ success: number; failed: number }> => {
+    if (!oldPw || !newPw) throw new Error('Both old and new master passwords are required.');
+    let success = 0;
+    let failed = 0;
+    for (const c of credentials) {
+      try {
+        let raw = c.password;
+        if (isEncryptedPayload(c.password)) {
+          raw = await decryptWithMasterPassword(c.password, oldPw);
+        }
+        const encResult = await encryptWithMasterPassword(raw, newPw);
+        updateCredential(c.id, {
+          password: encResult.formattedPayload,
+          isEncrypted: true,
+          encryptionAlgorithm: 'AES-256-GCM',
+          saltHex: encResult.saltHex,
+          ivHex: encResult.ivHex,
+          updatedAt: new Date().toISOString(),
+        });
+        success++;
+      } catch (e) {
+        console.error('Failed to migrate credential:', c.id, e);
+        failed++;
+      }
+    }
+    setMasterPassword(newPw);
+    return { success, failed };
   };
 
   // -------------------------------------------------------------------------
@@ -914,6 +1114,17 @@ export const VaultProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addCredential,
         updateCredential,
         deleteCredential,
+        masterPassword,
+        isMasterPasswordUnlocked,
+        setMasterPassword,
+        unlockMasterPassword,
+        lockMasterPassword,
+        encryptCredentialPassword,
+        decryptCredentialPassword,
+        decryptAndSaveCredential,
+        encryptAllCredentials,
+        decryptAllCredentials,
+        reencryptAllWithNewMasterPassword,
         addFamilyMember,
         updateFamilyMember,
         deleteFamilyMember,

@@ -112,6 +112,10 @@ export interface CredentialRecord {
   strengthScore: number; // 0-100
   lastRotatedDate: string;
   isFavorite: boolean;
+  isEncrypted?: boolean;
+  encryptionAlgorithm?: 'AES-256-GCM';
+  ivHex?: string;
+  saltHex?: string;
   createdAt?: string;
   updatedAt?: string;
 }
