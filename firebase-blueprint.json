@@ -5,13 +5,12 @@
       "description": "User account profile and vault security settings",
       "type": "object",
       "properties": {
-        "id": { "type": "string", "description": "Unique user ID" },
-        "name": { "type": "string", "description": "Full name of the user" },
-        "email": { "type": "string", "format": "email", "description": "Email address" },
-        "avatar": { "type": "string", "description": "Avatar URL or icon" },
+        "id": { "type": "string", "description": "Unique Firebase user UID" },
+        "name": { "type": "string", "description": "Full name of the account holder" },
+        "email": { "type": "string", "format": "email", "description": "User primary email address" },
+        "avatar": { "type": "string", "description": "Avatar URL or placeholder" },
         "role": { "type": "string", "enum": ["owner", "family_member"], "description": "Vault access role" },
-        "storageUsedMb": { "type": "number", "description": "Megabytes of storage used" },
-        "storageLimitMb": { "type": "number", "description": "Megabytes storage quota" },
+        "storageUsedBytes": { "type": "number", "description": "Bytes used in Cloud Storage" },
         "twoFactorEnabled": { "type": "boolean", "description": "Whether 2FA is active" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
@@ -20,27 +19,32 @@
     },
     "DocumentRecord": {
       "title": "DocumentRecord",
-      "description": "Stored digital identity, insurance, deed, tax, or legal document",
+      "description": "Stored digital identity, insurance, deed, tax, or legal document metadata",
       "type": "object",
       "properties": {
-        "id": { "type": "string", "description": "Document unique ID" },
-        "ownerId": { "type": "string", "description": "Firebase UID or account ID of owner" },
-        "title": { "type": "string", "description": "Document name or title" },
+        "id": { "type": "string", "description": "Document unique identifier" },
+        "ownerId": { "type": "string", "description": "Firebase UID of owner" },
+        "title": { "type": "string", "description": "Document title" },
         "category": { "type": "string", "description": "Document category" },
-        "fileName": { "type": "string", "description": "File name" },
-        "fileType": { "type": "string", "description": "File MIME type or extension" },
-        "fileSize": { "type": "string", "description": "File size label" },
-        "storagePath": { "type": "string", "description": "Path in cloud document storage" },
-        "storageUrl": { "type": "string", "description": "Cloud object storage URL" },
+        "fileName": { "type": "string", "description": "Original file name" },
+        "fileType": { "type": "string", "description": "MIME type" },
+        "fileSize": { "type": "string", "description": "Human-readable file size" },
+        "storagePath": { "type": "string", "description": "Cloud Storage path under users/{uid}/" },
+        "downloadUrl": { "type": "string", "description": "Cloud Storage download URL" },
         "ocrSummary": { "type": "string", "description": "AI OCR extraction summary" },
+        "documentNumber": { "type": "string", "description": "Document or policy number" },
+        "issuingAuthority": { "type": "string", "description": "Issuing agency or company" },
+        "issueDate": { "type": "string", "description": "Date of issue" },
+        "expiryDate": { "type": "string", "description": "Date of expiration" },
+        "renewalDate": { "type": "string", "description": "Date for renewal" },
+        "amount": { "type": "number", "description": "Financial amount if applicable" },
         "verifiedStatus": { "type": "string", "enum": ["Verified", "Pending", "Needs Review"] },
         "isFavorite": { "type": "boolean", "description": "Whether starred by user" },
-        "tags": { "type": "array", "description": "Associated metadata tags" },
-        "sharedWithFamilyIds": { "type": "array", "description": "List of family member IDs with access" },
+        "tags": { "type": "array", "description": "Metadata tags" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "title", "category"]
+      "required": ["id", "ownerId", "title", "category"]
     },
     "SubscriptionRecord": {
       "title": "SubscriptionRecord",
@@ -61,7 +65,7 @@
         "remindersEnabled": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "serviceName", "cost"]
+      "required": ["id", "ownerId", "serviceName", "cost"]
     },
     "BillRecord": {
       "title": "BillRecord",
@@ -69,7 +73,7 @@
       "type": "object",
       "properties": {
         "id": { "type": "string", "description": "Bill unique ID" },
-        "ownerId": { "type": "string", "description": "Owner ID" },
+        "ownerId": { "type": "string", "description": "Firebase UID of owner" },
         "title": { "type": "string", "description": "Bill description" },
         "biller": { "type": "string", "description": "Utility or billing entity" },
         "category": { "type": "string", "description": "Expense category" },
@@ -77,48 +81,51 @@
         "currency": { "type": "string", "description": "Currency code" },
         "dueDate": { "type": "string", "description": "Due date" },
         "status": { "type": "string", "enum": ["Pending", "Paid", "Overdue"] },
-        "recurring": { "type": "boolean" }
+        "recurring": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "title", "amount", "dueDate", "status"]
+      "required": ["id", "ownerId", "title", "amount", "dueDate", "status"]
     },
-    "CloudStorageFile": {
-      "title": "CloudStorageFile",
-      "description": "Document stored in Cloud Document Storage with integrity check",
+    "CredentialRecord": {
+      "title": "CredentialRecord",
+      "description": "Secure password and account credential record",
       "type": "object",
       "properties": {
-        "id": { "type": "string", "description": "Object identifier" },
-        "name": { "type": "string", "description": "File name" },
-        "mimeType": { "type": "string", "description": "Content type" },
-        "sizeBytes": { "type": "number", "description": "File size in bytes" },
-        "sha256": { "type": "string", "description": "Cryptographic checksum" },
-        "storageBucket": { "type": "string", "description": "Cloud bucket name" },
-        "uploadedBy": { "type": "string", "description": "Uploader email or UID" },
-        "uploadedAt": { "type": "string", "format": "date-time" },
-        "dataUri": { "type": "string", "description": "Encrypted Base64 document payload or pre-signed URL" }
+        "id": { "type": "string", "description": "Credential unique ID" },
+        "ownerId": { "type": "string", "description": "Firebase UID of owner" },
+        "title": { "type": "string", "description": "Account or service title" },
+        "username": { "type": "string", "description": "Account login or email" },
+        "password": { "type": "string", "description": "Account password or secure pin" },
+        "website": { "type": "string", "description": "Website or app URL" },
+        "category": { "type": "string", "description": "Category" },
+        "twoFactorSecret": { "type": "string", "description": "Optional 2FA backup code" },
+        "notes": { "type": "string", "description": "Encrypted notes" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "name", "sizeBytes"]
+      "required": ["id", "ownerId", "title", "username", "password"]
     }
   },
   "firestore": {
     "/users/{userId}": {
       "schema": { "$ref": "#/entities/UserProfile" },
-      "description": "User profile and security state"
+      "description": "User profile and vault metadata"
     },
-    "/documents/{documentId}": {
+    "/users/{userId}/documents/{documentId}": {
       "schema": { "$ref": "#/entities/DocumentRecord" },
-      "description": "Encrypted digital documents and metadata"
+      "description": "Digital documents and certificates scoped to user"
     },
-    "/subscriptions/{subscriptionId}": {
+    "/users/{userId}/subscriptions/{subscriptionId}": {
       "schema": { "$ref": "#/entities/SubscriptionRecord" },
-      "description": "Tracked user subscriptions"
+      "description": "User digital subscriptions and recurring renewals"
     },
-    "/bills/{billId}": {
+    "/users/{userId}/bills/{billId}": {
       "schema": { "$ref": "#/entities/BillRecord" },
-      "description": "Household bills and utility reminders"
+      "description": "User bills, utility deadlines, and payment tracking"
     },
-    "/cloudStorageFiles/{fileId}": {
-      "schema": { "$ref": "#/entities/CloudStorageFile" },
-      "description": "Cloud document storage objects and metadata"
+    "/users/{userId}/credentials/{credentialId}": {
+      "schema": { "$ref": "#/entities/CredentialRecord" },
+      "description": "Encrypted passwords and logins scoped to user"
     }
   }
 }

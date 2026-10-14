@@ -10,13 +10,16 @@ export type DocumentCategory =
 
 export interface DocumentRecord {
   id: string;
+  ownerId?: string;
   title: string;
   category: DocumentCategory;
   fileName: string;
   fileType: string;
   fileSize: string; // e.g., '1.8 MB'
-  s3Key: string;
-  s3Url: string;
+  s3Key?: string;
+  s3Url?: string;
+  storagePath?: string;
+  downloadUrl?: string;
   presignedUrlExpiresAt?: string;
   documentNumber?: string;
   issuingAuthority?: string;
@@ -44,6 +47,7 @@ export type SubscriptionCategory =
 
 export interface SubscriptionRecord {
   id: string;
+  ownerId?: string;
   serviceName: string;
   provider: string;
   category: SubscriptionCategory;
@@ -72,6 +76,7 @@ export type BillCategory =
 
 export interface BillRecord {
   id: string;
+  ownerId?: string;
   title: string;
   biller: string;
   category: BillCategory;
@@ -83,6 +88,7 @@ export interface BillRecord {
   receiptDocId?: string;
   paidAt?: string;
   notes?: string;
+  createdAt?: string;
 }
 
 export type CredentialCategory =
@@ -95,6 +101,7 @@ export type CredentialCategory =
 
 export interface CredentialRecord {
   id: string;
+  ownerId?: string;
   title: string;
   category: CredentialCategory;
   username: string;
@@ -105,6 +112,8 @@ export interface CredentialRecord {
   strengthScore: number; // 0-100
   lastRotatedDate: string;
   isFavorite: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface FamilyMember {
@@ -150,7 +159,7 @@ export interface UserProfile {
   twoFactorEnabled?: boolean;
   securityLevel?: 'Standard (OAuth 2.0)' | 'High (2FA Enforced)' | 'Enterprise Cloud';
   lastLoginAt?: string;
-  authProvider?: 'google' | 'google_workspace';
+  authProvider?: 'google' | 'google_workspace' | 'firebase_auth';
   verifiedEmail?: boolean;
 }
 

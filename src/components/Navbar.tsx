@@ -15,6 +15,8 @@ import { useVault } from '../context/VaultContext';
 export const Navbar: React.FC = () => {
   const {
     user,
+    firebaseUser,
+    cloudSyncStatus,
     setSearchModalOpen,
     setChatAssistantOpen,
     setCloudArchitectureOpen,
@@ -109,11 +111,35 @@ export const Navbar: React.FC = () => {
             <span className="hidden sm:inline">Upload & Scan</span>
           </button>
 
+          {/* Cloud Sync Status Indicator */}
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-medium text-slate-600">
+            <span
+              className={`w-2 h-2 rounded-full ${
+                cloudSyncStatus === 'synced'
+                  ? 'bg-emerald-500'
+                  : cloudSyncStatus === 'syncing'
+                  ? 'bg-sky-500 animate-pulse'
+                  : cloudSyncStatus === 'error'
+                  ? 'bg-rose-500'
+                  : 'bg-amber-400 animate-pulse'
+              }`}
+            ></span>
+            <span className="font-mono text-[10px]">
+              {cloudSyncStatus === 'synced'
+                ? 'Firestore Synced'
+                : cloudSyncStatus === 'syncing'
+                ? 'Syncing...'
+                : cloudSyncStatus === 'error'
+                ? 'Offline Mode'
+                : 'Connecting'}
+            </span>
+          </div>
+
           {/* Google Member Login Switcher Button */}
           <button
             onClick={() => setGoogleAuthModalOpen(true)}
             className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 text-xs font-medium transition shadow-xs group"
-            title={`Google Login: ${user.email} (2FA Enforced)`}
+            title={firebaseUser ? `Authenticated as ${firebaseUser.email}` : 'Sign In with Firebase'}
           >
             <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center p-0.5 shadow-xs shrink-0 border border-slate-200">
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5">
@@ -136,10 +162,14 @@ export const Navbar: React.FC = () => {
               </svg>
             </div>
             <span className="hidden md:inline font-semibold text-slate-800">
-              {user.email ? user.email.split('@')[0] : 'Sign In with Google'}
+              {firebaseUser
+                ? firebaseUser.displayName || firebaseUser.email?.split('@')[0]
+                : user.email
+                ? user.email.split('@')[0]
+                : 'Cloud Sign In'}
             </span>
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 font-semibold hidden lg:inline border border-emerald-200">
-              2FA Active
+              {firebaseUser ? 'Cloud Active' : 'Auth Ready'}
             </span>
           </button>
 

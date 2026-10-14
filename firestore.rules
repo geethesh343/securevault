@@ -1,7 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Default-deny catch-all safety net
+    // 1. Default-deny catch-all safety net
     match /{document=**} {
       allow read, write: if false;
     }
@@ -19,51 +19,67 @@ service cloud.firestore {
       return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
-    // Test ping collection for connectivity validation
+    // Connectivity verification document
     match /test/{docId} {
       allow read: if true;
       allow write: if isSignedIn();
     }
 
-    // User profiles & security credentials
+    // User Profile: /users/{userId}
     match /users/{userId} {
       allow get: if isOwner(userId);
       allow list: if false;
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isOwner(userId) && request.resource.data.id == userId;
       allow delete: if isOwner(userId);
-    }
 
-    // Vault digital documents
-    match /documents/{documentId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn() && isValidId(documentId);
-      allow update: if isSignedIn() && isValidId(documentId);
-      allow delete: if isSignedIn();
-    }
+      // Subcollection: Documents
+      match /documents/{documentId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && isValidId(documentId)
+          && request.resource.data.ownerId == userId;
+        allow update: if isOwner(userId)
+          && isValidId(documentId)
+          && request.resource.data.ownerId == userId;
+        allow delete: if isOwner(userId);
+      }
 
-    // Recurring subscriptions
-    match /subscriptions/{subscriptionId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn() && isValidId(subscriptionId);
-      allow update: if isSignedIn() && isValidId(subscriptionId);
-      allow delete: if isSignedIn();
-    }
+      // Subcollection: Subscriptions
+      match /subscriptions/{subscriptionId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && isValidId(subscriptionId)
+          && request.resource.data.ownerId == userId;
+        allow update: if isOwner(userId)
+          && isValidId(subscriptionId)
+          && request.resource.data.ownerId == userId;
+        allow delete: if isOwner(userId);
+      }
 
-    // Bills and financial obligations
-    match /bills/{billId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn() && isValidId(billId);
-      allow update: if isSignedIn() && isValidId(billId);
-      allow delete: if isSignedIn();
-    }
+      // Subcollection: Bills
+      match /bills/{billId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && isValidId(billId)
+          && request.resource.data.ownerId == userId;
+        allow update: if isOwner(userId)
+          && isValidId(billId)
+          && request.resource.data.ownerId == userId;
+        allow delete: if isOwner(userId);
+      }
 
-    // Cloud document storage files and hashes
-    match /cloudStorageFiles/{fileId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn() && isValidId(fileId);
-      allow update: if isSignedIn() && isValidId(fileId);
-      allow delete: if isSignedIn();
+      // Subcollection: Credentials
+      match /credentials/{credentialId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && isValidId(credentialId)
+          && request.resource.data.ownerId == userId;
+        allow update: if isOwner(userId)
+          && isValidId(credentialId)
+          && request.resource.data.ownerId == userId;
+        allow delete: if isOwner(userId);
+      }
     }
   }
 }

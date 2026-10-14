@@ -1,12 +1,12 @@
 {
-  "projectId": "silken-vigil-tlcf1",
-  "appId": "1:1040529341263:web:cab9b41a60f615f286a33a",
-  "apiKey": "AIzaSyA9qAGSLr6bpBJ9bqfbowgXiNFyeGrkJ_o",
-  "authDomain": "silken-vigil-tlcf1.firebaseapp.com",
+  "projectId": "life-vault-f36d3",
+  "appId": "1:630147825752:web:0b7c1e77a9116cfa250a2d",
+  "apiKey": "AIzaSyClzFtPN3CNuAiggp8vUOGXE8crzrN4Ic8",
+  "authDomain": "life-vault-f36d3.firebaseapp.com",
   "firestoreDatabaseId": "ai-studio-lifevaultailifem-73759420-4dcc-4f20-b491-75a07b5d9df4",
-  "storageBucket": "silken-vigil-tlcf1.firebasestorage.app",
-  "messagingSenderId": "1040529341263",
-  "measurementId": "",
-  "oAuthClientId": "1040529341263-rk0klu1p2v93npmvmetog4eif28eqj0r.apps.googleusercontent.com",
+  "storageBucket": "life-vault-f36d3.firebasestorage.app",
+  "messagingSenderId": "630147825752",
+  "measurementId": "G-7PGNPCKGVB",
+  "oAuthClientId": "630147825752-6atcjqfvfdjkkp893defjc5ieu8486md.apps.googleusercontent.com",
   "recaptchaSiteKey": ""
 }

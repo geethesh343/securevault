@@ -1,0 +1,22 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Default-deny all public access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    // User-scoped private documents: users/{userId}/**
+    match /users/{userId}/{allPaths=**} {
+      // Allow read, create, update, delete only to the authenticated owner
+      // Validate file size is <= 15MB
+      allow read, delete: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null 
+        && request.auth.uid == userId
+        && request.resource.size < 15 * 1024 * 1024
+        && (request.resource.contentType.matches('application/pdf')
+            || request.resource.contentType.matches('image/.*')
+            || request.resource.contentType.matches('text/plain'));
+    }
+  }
+}

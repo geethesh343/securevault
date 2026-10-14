@@ -381,7 +381,7 @@ export const OverviewTab: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold text-slate-900">Recent Documents in Encrypted Vault</h3>
-              <p className="text-xs text-slate-500">Stored on Amazon S3 with AES-256 server-side encryption</p>
+              <p className="text-xs text-slate-500">Stored on Firebase Cloud Storage & synchronized with Cloud Firestore</p>
             </div>
             <button
               onClick={() => setActiveTab('documents')}
